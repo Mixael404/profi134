@@ -1,8 +1,9 @@
+import { TelegramTask } from '@app/common';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class ConsumerService {
-  getHello(): string {
-    return 'Hello World!';
+  async processTaskFromQueue(task: TelegramTask) {
+    console.log(task);
   }
 }

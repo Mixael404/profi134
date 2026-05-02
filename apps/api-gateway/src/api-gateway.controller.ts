@@ -1,12 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { CreateNotificationDto } from '@app/common/dto/create-task.dto';
 import { ApiGatewayService } from './api-gateway.service';
 
-@Controller()
+@Controller('notifications')
 export class ApiGatewayController {
   constructor(private readonly apiGatewayService: ApiGatewayService) {}
 
-  @Get()
-  getHello(): string {
-    return this.apiGatewayService.getHello();
+  @Post()
+  @HttpCode(202)
+  sendNotification(@Body() dto: CreateNotificationDto) {
+    return this.apiGatewayService.sendNotification(dto);
   }
 }
