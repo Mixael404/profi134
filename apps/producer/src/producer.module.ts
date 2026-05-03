@@ -1,26 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { RABBITMQ_CLIENT_TOKEN, TASKS_QUEUE } from '@app/common';
 import { ProducerController } from './producer.controller';
 import { ProducerService } from './producer.service';
+import { RmqPublisherService } from './rmq-publisher.service';
+import { RetryService } from './retry.service';
+import { QUEUE_PUBLISHER } from './queue-publisher.interface';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    ClientsModule.register([
-      {
-        name: RABBITMQ_CLIENT_TOKEN,
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL ?? 'amqp://rabbitmq:5672'],
-          queue: TASKS_QUEUE,
-          queueOptions: { durable: true },
-        },
-      },
-    ]),
-  ],
+  imports: [ConfigModule.forRoot({ isGlobal: true })],
   controllers: [ProducerController],
-  providers: [ProducerService],
+  providers: [
+    ProducerService,
+    RetryService,
+    RmqPublisherService,
+    { provide: QUEUE_PUBLISHER, useExisting: RmqPublisherService },
+  ],
 })
 export class ProducerModule {}

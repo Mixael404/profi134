@@ -9,6 +9,6 @@ export class ConsumerService {
 
   async processTaskFromQueue(task: TelegramTask) {
     await new Promise((resolve) => setTimeout(resolve, PROCESSING_DELAY_MS));
-    this.logger.log('Task is completed 222');
+    this.logger.log('Task is completed 444');
   }
 }

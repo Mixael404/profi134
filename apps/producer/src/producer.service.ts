@@ -1,27 +1,22 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
 import { randomUUID } from 'crypto';
 import {
   CreateNotificationDto,
   NOTIFICATION_EVENT,
-  RABBITMQ_CLIENT_TOKEN,
+  TASKS_QUEUE,
   TelegramTask,
 } from '@app/common';
+import { IQueuePublisher, QUEUE_PUBLISHER } from './queue-publisher.interface';
+import { RetryService } from './retry.service';
 
 @Injectable()
 export class ProducerService {
   private readonly logger = new Logger(ProducerService.name);
-  private readonly processedIds = new Set<string>();
 
   constructor(
-    @Inject(RABBITMQ_CLIENT_TOKEN)
-    private readonly rabbitClient: ClientProxy,
+    @Inject(QUEUE_PUBLISHER) private readonly publisher: IQueuePublisher,
+    private readonly retryService: RetryService,
   ) {}
-
-  async onApplicationBootstrap() {
-    await this.rabbitClient.connect();
-  }
 
   async createTelegramTask(
     dto: CreateNotificationDto,
@@ -33,14 +28,23 @@ export class ProducerService {
       createdAt: new Date().toISOString(),
     };
 
-    if (this.processedIds.has(task.id)) {
-      this.logger.warn(`Duplicate task ${task.id} rejected`);
-      return { success: false, taskId: task.id };
-    }
+    const publishCb = () => {
+      return this.publisher.publish(
+        TASKS_QUEUE,
+        Buffer.from(
+          JSON.stringify({ pattern: NOTIFICATION_EVENT, data: task }),
+        ),
+        {
+          persistent: true,
+          messageId: task.id,
+          contentType: 'application/json',
+        },
+      );
+    };
 
-    await firstValueFrom(this.rabbitClient.emit(NOTIFICATION_EVENT, task));
-    this.processedIds.add(task.id);
+    await this.retryService.execute(publishCb, `Task ${task.id}`);
 
+    this.logger.log(`Task ${task.id} confirmed by broker`);
     return { success: true, taskId: task.id };
   }
 }

@@ -2,6 +2,8 @@ services:
   producer:
     build:
       target: dev
+    environment:
+      WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
       - /app/node_modules
@@ -9,6 +11,8 @@ services:
   consumer:
     build:
       target: dev
+    environment:
+      WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
       - /app/node_modules
@@ -16,6 +20,8 @@ services:
   api-gateway:
     build:
       target: dev
+    environment:
+      WATCHPACK_POLLING: "true"
     volumes:
       - .:/app
       - /app/node_modules
