@@ -17,10 +17,6 @@ export class ApiGatewayService {
     private readonly producerClient: ClientProxy,
   ) {}
 
-  async onApplicationBootstrap() {
-    await this.producerClient.connect();
-  }
-
   async sendNotification(dto: CreateNotificationDto) {
     return firstValueFrom(
       this.producerClient.send('task_create', dto).pipe(
