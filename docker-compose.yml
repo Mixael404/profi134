@@ -40,9 +40,29 @@ services:
     environment:
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
       RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-tasks_queue}
+      TELEGRAM_SERVICE_HOST: telegram-service
+      TELEGRAM_SERVICE_PORT: 3002
     depends_on:
       rabbitmq:
         condition: service_healthy
+      telegram-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  telegram-service:
+    build:
+      context: .
+      args:
+        APP_NAME: telegram-service
+    environment:
+      TG_BOT_TOKEN: ${TG_BOT_TOKEN}
+      TELEGRAM_SERVICE_PORT: 3002
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection(3002,'localhost').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
     restart: unless-stopped
 
   api-gateway:

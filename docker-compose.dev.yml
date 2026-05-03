@@ -17,6 +17,15 @@ services:
       - .:/app
       - /app/node_modules
 
+  telegram-service:
+    build:
+      target: dev
+    environment:
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - .:/app
+      - /app/node_modules
+
   api-gateway:
     build:
       target: dev
