@@ -30,7 +30,6 @@ export class ApiGatewayService {
         ),
       ),
     ).then((result) => {
-      this.logger.log(`Task queued: ${result.taskId}`);
       return result;
     });
   }

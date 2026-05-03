@@ -1,0 +1,62 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  producer:
+    build:
+      context: .
+      args:
+        APP_NAME: producer
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('net').createConnection(3001,'localhost').on('connect',()=>process.exit(0)).on('error',()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    restart: unless-stopped
+
+  consumer:
+    build:
+      context: .
+      args:
+        APP_NAME: consumer
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE:-tasks_queue}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+
+  api-gateway:
+    build:
+      context: .
+      args:
+        APP_NAME: api-gateway
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      PORT: 3000
+      PRODUCER_HOST: producer
+      PRODUCER_PORT: 3001
+    depends_on:
+      producer:
+        condition: service_healthy
+    restart: unless-stopped

@@ -9,6 +9,7 @@ export class ProducerController {
 
   @MessagePattern('task_create')
   createTelegramTask(@Payload() dto: CreateNotificationDto) {
+    console.log('Received task_create message');
     return this.producerService.createTelegramTask(dto);
   }
 }

@@ -11,6 +11,8 @@ async function bootstrap() {
         urls: [process.env.RABBITMQ_URL ?? 'amqp://rabbitmq:5672'],
         queue: process.env.RABBITMQ_QUEUE ?? 'tasks_queue',
         queueOptions: { durable: true },
+        noAck: false,
+        prefetchCount: 1,
       },
     },
   );

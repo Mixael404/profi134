@@ -1,0 +1,21 @@
+services:
+  producer:
+    build:
+      target: dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  consumer:
+    build:
+      target: dev
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  api-gateway:
+    build:
+      target: dev
+    volumes:
+      - .:/app
+      - /app/node_modules

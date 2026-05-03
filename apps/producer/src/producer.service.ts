@@ -40,7 +40,6 @@ export class ProducerService {
 
     await firstValueFrom(this.rabbitClient.emit(NOTIFICATION_EVENT, task));
     this.processedIds.add(task.id);
-    this.logger.log(`Task ${task.id} emitted`);
 
     return { success: true, taskId: task.id };
   }
